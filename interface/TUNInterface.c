@@ -13,12 +13,23 @@
  */
 #include <string.h>
 #include <event2/event.h>
-#include <linux/if.h>
-#include <linux/if_tun.h>
+#include <net/if.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <errno.h>
+
+#ifdef __APPLE__
+    #define APPLE_UTUN_CONTROL "com.apple.net.utun_control"
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <sys/kern_control.h>
+    #include <sys/sys_domain.h>
+    #include <sys/kern_event.h>
+    #include <sys/errno.h>
+#else
+    #include <net/if_tun.h>
+#endif
 
 #include "interface/Interface.h"
 #include "interface/TUNInterface.h"
@@ -34,6 +45,38 @@ struct Tunnel
     int fileDescriptor;
     struct Interface interface;
 };
+
+#ifdef __APPLE__
+
+int openTunnel(const char* interfaceName) {
+
+    fprintf(stderr, "Initializing tun device: ");                                                                       
+    if (interfaceName) {                                                                                                
+        fprintf(stderr, "%s", interfaceName);                                                                           
+    }                                                                                                                   
+    fprintf(stderr, "\n");                                                                                              
+                                                                                                                         
+	int tunFileDescriptor = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+	struct sockaddr_ctl addr;
+
+    /* get/set the id */
+	struct ctl_info info;
+	memset(&info, 0, sizeof(info)) ;
+	strncpy(info.ctl_name, APPLE_UTUN_CONTROL, strlen(APPLE_UTUN_CONTROL));
+
+	ioctl(tunFileDescriptor, CTLIOCGINFO, &info) ;
+	addr.sc_id = info.ctl_id;
+
+	addr.sc_len = sizeof(addr) ;
+	addr.sc_family = AF_SYSTEM ;
+	addr.ss_sysaddr = AF_SYS_CONTROL ;
+	addr.sc_unit = 0 ; /* allocate dynamically */
+
+	connect(tunFileDescriptor, (struct sockaddr*)&addr, sizeof(addr)) ;
+	return tunFileDescriptor;
+}
+
+#else /* __APPLE__ */
 
 static int openTunnel(const char* interfaceName)
 {
@@ -65,6 +108,8 @@ static int openTunnel(const char* interfaceName)
 
     return tunFileDescriptor;
 }
+
+#endif /* __APPLE__ */
 
 static void closeInterface(void* vcontext)
 {
