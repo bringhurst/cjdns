@@ -27,6 +27,7 @@ struct Log
     struct Writer* writer;
 };
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 static inline void Log_logInternal(struct Log* log, char* logLevel, char* file, char* format, ...)
 {
     if (!log) {
@@ -55,6 +56,7 @@ static inline void Log_logInternal(struct Log* log, char* logLevel, char* file, 
     va_end(args);
     #undef Log_BUFFER_SZ
 }
+#pragma GCC diagnostic warning "-Wunused-parameter"
 
 #ifdef Log_KEYS
     #define Log_DEBUG
