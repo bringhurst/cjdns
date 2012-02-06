@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 static int32_t parseGeneric(const struct Reader* reader,
                             const struct Allocator* allocator,
@@ -151,7 +152,7 @@ static int32_t serializeint64_t(const struct Writer* writer,
     memset(buffer, 0, 32);
 
     /* Need to handle 32 bit or 64 bit boxen. */
-    sprintf(buffer, (sizeof(long int) == 8) ? "%ld" : "%lld", integer);
+    sprintf(buffer, "%" PRIu64, integer);
 
     return writer->write(buffer, strlen(buffer), writer);
 }
