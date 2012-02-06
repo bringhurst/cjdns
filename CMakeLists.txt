@@ -35,11 +35,16 @@ add_definitions(
 
     -Wstack-protector
     -D_FORTIFY_SOURCE=2
-    -Wa,--noexecstack
-    -Wl,-z,relro
-    -Wl,-z,now
-    -Wl,-z,noexecstack
 )
+
+if(NOT DEFINED APPLE)
+    add_definitions(
+        -Wa,--noexecstack
+        -Wl,-z,relro
+        -Wl,-z,now
+        -Wl,-z,noexecstack
+    )
+endif(NOT DEFINED APPLE)
 
 # debugging
 add_definitions(-g)
