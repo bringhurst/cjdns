@@ -63,7 +63,10 @@ int openTunnel(const char* interfaceName) {
     memset(&info, 0, sizeof(info));
     strncpy(info.ctl_name, APPLE_UTUN_CONTROL, strlen(APPLE_UTUN_CONTROL));
 
-    ioctl(tunFileDescriptor, CTLIOCGINFO, &info);
+    if(ioctl(tunFileDescriptor, CTLIOCGINFO, &info) == -1) {
+        fprintf(stderr, "Error while setting options on kernel control: %s\n", strerror(errno));
+    }
+
     addr.sc_id = info.ctl_id;
 
     addr.sc_len = sizeof(addr);
@@ -71,7 +74,10 @@ int openTunnel(const char* interfaceName) {
     addr.ss_sysaddr = AF_SYS_CONTROL;
     addr.sc_unit = 0 ; /* allocate dynamically */
 
-    connect(tunFileDescriptor, (struct sockaddr*)&addr, sizeof(addr));
+    if(connect(tunFileDescriptor, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+        fprintf(stderr, "Error attempting to connect to tun device: %s\n", strerror(errno));
+    }
+
     return tunFileDescriptor;
 }
 
