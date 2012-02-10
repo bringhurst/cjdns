@@ -28,7 +28,8 @@
     #include <sys/kern_event.h>
     #include <sys/errno.h>
 #else
-    #include <net/if_tun.h>
+    #include <linux/if.h>
+    #include <linux/if_tun.h>
 #endif
 
 #include "interface/Interface.h"
