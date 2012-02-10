@@ -336,12 +336,21 @@ static int getcmds(Dict* config)
         tunDev = strrchr(tunDev, '/') + 1;
     }
 
+#ifdef __APPLE__
+    printf("#!/bin/bash\n"
+           "# Run these commands immediately after cjdns is initialized\n"
+           "# in order to get the interfaces setup properly.\n\n");
+    printf("ifconfig %s tunnel %s 10.0.1.1\n", tunDev, myIp);
+    printf("route -n add -inet6 default fc00::/8 -interface %s\n", tunDev);
+    printf("ip6 -u %s\n", tunDev);
+#else
     printf("#!/bin/bash\n"
            "# Run these commands as root now and every time the system is rebooted\n"
            "# in order to get the interfaces setup properly.\n\n");
     printf("/sbin/ip addr add %s dev %s\n", myIp, tunDev);
     printf("/sbin/ip -6 route add fc00::/8 dev %s\n", tunDev);
     printf("/sbin/ip link set %s up\n", tunDev);
+#endif /* __APPLE__ */
 
     return 0;
 }
